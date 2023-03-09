@@ -4,7 +4,7 @@ import {
   WEBSOCKET_DISCONNECT,
   WEBSOCKET_MESSAGE,
   WEBSOCKET_OPEN,
-  WEBSOCKET_SEND,
+  WEBSOCKET_SEND
 } from './actionTypes';
 
 type Serializer = (
@@ -38,6 +38,7 @@ type Options = {
   dateSerializer?: (date: Date) => string | number;
   serializer?: Serializer;
   deserializer?: Deserializer;
+  reconnectAttempts?: number;
 };
 
 // Huh? https://github.com/babel/babel/issues/6065#issuecomment-453901877

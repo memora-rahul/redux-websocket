@@ -10,7 +10,7 @@ import {
   reconnectAttempt,
   reconnected,
 } from './actions';
-import { Action, Serializer, Deserializer } from './types';
+import { Action, Deserializer, Serializer } from './types';
 
 interface ReduxWebSocketOptions {
   prefix: string;
@@ -20,6 +20,7 @@ interface ReduxWebSocketOptions {
   onOpen?: (s: WebSocket) => void;
   serializer?: Serializer;
   deserializer?: Deserializer;
+  reconnectAttempts?: number;
 }
 
 /**
@@ -242,7 +243,7 @@ export default class ReduxWebSocket {
    * @param {Dispatch} dispatch
    */
   private handleBrokenConnection = (dispatch: Dispatch) => {
-    const { prefix, reconnectInterval } = this.options;
+    const { prefix, reconnectInterval, reconnectAttempts = 0 } = this.options;
 
     this.websocket = null;
 
@@ -263,6 +264,16 @@ export default class ReduxWebSocket {
 
     // Attempt reconnecting on an interval.
     this.reconnectionInterval = setInterval(() => {
+      if (
+        reconnectAttempts !== 0 &&
+        this.reconnectCount > reconnectAttempts &&
+        this.reconnectionInterval
+      ) {
+        clearInterval(this.reconnectionInterval);
+
+        this.reconnectionInterval = null;
+        this.reconnectCount = 0;
+      }
       this.reconnectCount += 1;
 
       dispatch(reconnectAttempt(this.reconnectCount, prefix));

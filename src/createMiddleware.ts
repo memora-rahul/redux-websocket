@@ -1,9 +1,9 @@
 import { Middleware, MiddlewareAPI } from 'redux';
 
-import { Action, Options } from './types';
 import { error } from './actions';
 import * as actionTypes from './actionTypes';
 import ReduxWebSocket from './ReduxWebSocket';
+import { Action, Options } from './types';
 
 /**
  * Default middleware creator options.
@@ -16,6 +16,7 @@ const defaultOptions = {
   reconnectOnClose: false,
   reconnectOnError: true,
   serializer: JSON.stringify,
+  reconnectAttempts: 0
 };
 
 /**
