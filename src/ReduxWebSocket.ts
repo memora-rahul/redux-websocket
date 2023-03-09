@@ -21,6 +21,7 @@ interface ReduxWebSocketOptions {
   serializer?: Serializer;
   deserializer?: Deserializer;
   reconnectAttempts?: number;
+  shouldStopReconnect?: (error: Event) => boolean;
 }
 
 /**
@@ -51,6 +52,8 @@ export default class ReduxWebSocket {
 
   // Keep track of if the WebSocket connection has ever successfully opened.
   private hasOpened = false;
+
+  private stopReconnect = false;
 
   /**
    * Constructor
@@ -137,6 +140,12 @@ export default class ReduxWebSocket {
    * @param {Event} event
    */
   private handleClose = (dispatch: Dispatch, prefix: string, event: Event) => {
+    const { shouldStopReconnect } = this.options;
+
+    if (shouldStopReconnect && event) {
+      this.stopReconnect = shouldStopReconnect(event);
+    }
+
     dispatch(closed(event, prefix));
 
     // Conditionally attempt reconnection if enabled and applicable
@@ -265,8 +274,8 @@ export default class ReduxWebSocket {
     // Attempt reconnecting on an interval.
     this.reconnectionInterval = setInterval(() => {
       if (
-        reconnectAttempts !== 0 &&
-        this.reconnectCount > reconnectAttempts &&
+        ((reconnectAttempts !== 0 && this.reconnectCount > reconnectAttempts) ||
+          this.stopReconnect) &&
         this.reconnectionInterval
       ) {
         clearInterval(this.reconnectionInterval);
